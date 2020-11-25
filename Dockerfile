@@ -1,5 +1,8 @@
-# we are extending everything from tomcat:8.0 image ...
-FROM tomcat
-MAINTAINER kasturirajeevdevops@gmail.com
-# COPY path-to-your-application-war path-to-webapps-in-docker-tomcat
-COPY opt/tomcat/webapps/mvn-hello-world.war /usr/local/tomcat/webapps/
+# we are extending everything from tomcat
+FROM tomcat:8.5.16-jre8-alpine
+
+MAINTAINER naseer "naseerdevops@gmail.com"
+
+CMD ["catalina.sh", "run"]
+
+
