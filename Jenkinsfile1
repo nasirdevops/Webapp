@@ -1,35 +1,28 @@
-pipeline {
-    agent {
-        label "master"
-    }
-    tools {
-        maven "maven3.6.3"
-    }
-    environment {
-        NEXUS_VERSION = "nexus3"
-        NEXUS_PROTOCOL = "http"
-        NEXUS_URL = "13.64.169.57:8081"
-        NEXUS_REPOSITORY = "maven-nexus-repo"
-        NEXUS_CREDENTIAL_ID = "nexusAdmin"
-    }
-    stages {
-        stage("Clone code from github") {
-            steps {
-                script {
-                    git 'https://github.com/nasirdevops/Webapp.git';
-                }
-            }
-        }
-        stage("Maven Build") {
-            steps {
-                script {
-                    sh "mvn package -DskipTests=true"
-                }
-            }
-        }
-        stage("Publish to Nexus Repository Manager") {
-            steps {
-                script {
+node {
+      stage ('SCM Checkout'){
+      git url: 'https://github.com/nasirdevops/Webapp.git'
+      }
+      stage('Mvn install'){
+      def mvnHome = tool name: 'maven3.6.3', type: 'maven'
+      def mvnCMD = "${mvnHome}/bin/mvn"
+      sh "${mvnCMD} clean install"
+      }
+      stage('Mvn Compile'){
+      def mvnHome = tool name: 'maven3.6.3', type: 'maven'
+      def mvnCMD = "${mvnHome}/bin/mvn"
+      sh "${mvnCMD} clean compile"
+      }
+      stage('Mvn Test'){
+      def mvnHome = tool name: 'maven3.6.3', type: 'maven'
+      def mvnCMD = "${mvnHome}/bin/mvn"
+      sh "${mvnCMD} test"
+      }
+      stage('Mvn Package'){
+      def mvnHome = tool name: 'maven3.6.3', type: 'maven'
+      def mvnCMD = "${mvnHome}/bin/mvn"
+      sh "${mvnCMD} clean package"
+      }
+ stage("Publish to Nexus Repository Manager") {
                     pom = readMavenPom file: "pom.xml";
                     filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
                     echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
@@ -38,13 +31,14 @@ pipeline {
                     if(artifactExists) {
                         echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
                         nexusArtifactUploader(
-                            nexusVersion: NEXUS_VERSION,
-                            protocol: NEXUS_PROTOCOL,
-                            nexusUrl: NEXUS_URL,
+                            nexusVersion: "nexus3",
+                            protocol: "http",
+                            nexusUrl: "13.64.169.57:8081",
                             groupId: pom.groupId,
                             version: pom.version,
-                            repository: NEXUS_REPOSITORY,
-                            credentialsId: NEXUS_CREDENTIAL_ID,
+                            repository: "maven-nexus-repo",
+                            credentialsId: "nexusAdmin",
+
                             artifacts: [
                                 [artifactId: pom.artifactId,
                                 classifier: '',
@@ -58,9 +52,6 @@ pipeline {
                         );
                     } else {
                         error "*** File: ${artifactPath}, could not be found";
-                    }
-                }
-            }
         }
     }
 }
